@@ -12,6 +12,7 @@ from rich.table import Table
 from netops.design.ipam import design_network
 from netops.parse import load_intent
 from netops.render.ios import render_ios
+from netops.render.topology import render_topology_markdown
 from netops.verify import verify_ios
 from netops.verify_batfish import (
     run_batfish_undefined_reference_check,
@@ -37,11 +38,15 @@ def design(
         raise typer.Exit(code=2) from exc
 
     output.mkdir(parents=True, exist_ok=True)
+    topology = render_topology_markdown(planned)
     (output / "design.json").write_text(
         json.dumps(planned.to_dict(), indent=2) + "\n", encoding="utf-8"
     )
     (output / "ios.cfg").write_text(config, encoding="utf-8")
-    console.print(f"Wrote {output / 'design.json'} and {output / 'ios.cfg'}")
+    (output / "topology.md").write_text(topology, encoding="utf-8")
+    console.print(
+        f"Wrote {output / 'design.json'}, {output / 'ios.cfg'}, and {output / 'topology.md'}"
+    )
 
 
 @app.command()

@@ -27,7 +27,11 @@ uv run netops design examples/campus.yaml --output build
 uv run netops verify examples/campus.yaml build/ios.cfg
 ```
 
-`netops design` writes `design.json` and `ios.cfg` under the output directory. `netops verify` exits nonzero if any blocker finding is present. Nothing is deployed.
+`netops design` writes `design.json`, `ios.cfg`, and `topology.md` under the output directory. `netops verify` exits nonzero if any blocker finding is present. Nothing is deployed.
+
+Open `build/topology.md` in VS Code and use **Markdown: Open Preview** (`Ctrl+Shift+V`) to see the Mermaid network diagram. The diagram and its source are local and static; they describe the planned design, not live network state.
+
+See [System architecture](docs/architecture.md) for component boundaries and trust rules, and [Build, test, and visualize](docs/workflow.md) for the full input-to-output workflow and visualization notes.
 
 To run the optional Batfish undefined-reference check, start a compatible Batfish service and install the extra with `uv sync --extra dev --extra batfish`, then run `uv run netops verify-batfish --network <network-name> <snapshot-directory>`. Missing PyBatfish, a failed query, or an unavailable snapshot fails closed. This one check is not the complete semantic/behavioral verification roadmap.
 
@@ -56,4 +60,4 @@ uv run mypy
 uv build
 ```
 
-The repository is intended to be pushed to a separate GitHub repository. Create that repository in GitHub, then set its URL as `origin` in this directory. A remote has not been configured by this setup.
+GitHub repository: [TD-Bethel/Autonomous-Network-Topology-Configuration-Agent-NetOps-CLI-Assistant-](https://github.com/TD-Bethel/Autonomous-Network-Topology-Configuration-Agent-NetOps-CLI-Assistant-). The local `main` branch tracks `origin/main`.
