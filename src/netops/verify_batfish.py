@@ -7,7 +7,7 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from netops.verify import Finding
+from netops.ir.v1.findings import Finding
 
 
 class BatfishUnavailableError(RuntimeError):

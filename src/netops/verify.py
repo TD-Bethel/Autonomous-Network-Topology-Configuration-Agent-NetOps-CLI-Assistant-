@@ -1,22 +1,26 @@
 """Fail-closed offline semantic checks for the generated IOS subset."""
 
 import re
-from dataclasses import asdict, dataclass
 from ipaddress import IPv4Network
-from typing import Literal
 
 from netops.design.ipam import NetworkDesign
+from netops.ir.v1.findings import Finding, FindingSeverity
 
-Severity = Literal["blocker", "warn", "info"]
 
-
-@dataclass(frozen=True, slots=True)
-class Finding:
-    rule_id: str
-    severity: Severity
-    device: str
-    evidence: str
-    remediation: str | None
+def _make_finding(
+    rule_id: str,
+    severity: FindingSeverity,
+    device: str,
+    evidence: str,
+    remediation: str,
+) -> Finding:
+    return Finding(
+        rule_id=rule_id,
+        severity=severity,
+        device=device,
+        evidence=evidence,
+        remediation=remediation,
+    )
 
 
 def verify_ios(config: str, design: NetworkDesign, device: str = "offline") -> list[Finding]:
@@ -42,7 +46,7 @@ def verify_ios(config: str, design: NetworkDesign, device: str = "offline") -> l
         duplicates = sorted({value for value in values if values.count(value) > 1})
         if duplicates:
             findings.append(
-                Finding(
+                _make_finding(
                     "IOS-DUPLICATE-OBJECT",
                     "blocker",
                     device,
@@ -54,7 +58,7 @@ def verify_ios(config: str, design: NetworkDesign, device: str = "offline") -> l
     expected_ids = {vlan.vlan_id for vlan in design.vlans}
     for unknown in sorted(set(vlan_ids + svi_ids) - expected_ids):
         findings.append(
-            Finding(
+            _make_finding(
                 "IOS-UNEXPECTED-VLAN",
                 "blocker",
                 device,
@@ -73,7 +77,7 @@ def verify_ios(config: str, design: NetworkDesign, device: str = "offline") -> l
     }
     for unknown_pool in sorted(actual_pools - expected_pools):
         findings.append(
-            Finding(
+            _make_finding(
                 "IOS-UNEXPECTED-DHCP-POOL",
                 "blocker",
                 device,
@@ -118,7 +122,7 @@ def verify_ios(config: str, design: NetworkDesign, device: str = "offline") -> l
         for found, label in expected:
             if not found:
                 findings.append(
-                    Finding(
+                    _make_finding(
                         "IOS-MISSING-EXPECTED-STATE",
                         "blocker",
                         device,
@@ -164,7 +168,7 @@ def verify_ios(config: str, design: NetworkDesign, device: str = "offline") -> l
             for found, label in [(bool(pool_stanza), "DHCP pool"), *expected_dhcp]:
                 if not found:
                     findings.append(
-                        Finding(
+                        _make_finding(
                             "IOS-MISSING-DHCP-STATE",
                             "blocker",
                             device,
@@ -191,7 +195,7 @@ def verify_ios(config: str, design: NetworkDesign, device: str = "offline") -> l
     )
     if not all(loopback_expectations):
         findings.append(
-            Finding(
+            _make_finding(
                 "IOS-MISSING-LOOPBACK",
                 "blocker",
                 device,
@@ -209,7 +213,7 @@ def verify_ios(config: str, design: NetworkDesign, device: str = "offline") -> l
         )
     ):
         findings.append(
-            Finding(
+            _make_finding(
                 "IOS-MISSING-OSPF-BASELINE",
                 "blocker",
                 device,
@@ -232,7 +236,7 @@ def verify_ios(config: str, design: NetworkDesign, device: str = "offline") -> l
         )
         if not all(re.search(pattern, link_stanza) for pattern in link_patterns):
             findings.append(
-                Finding(
+                _make_finding(
                     "IOS-MISSING-P2P-STATE",
                     "blocker",
                     device,
@@ -246,7 +250,7 @@ def verify_ios(config: str, design: NetworkDesign, device: str = "offline") -> l
             ospf_stanza,
         ):
             findings.append(
-                Finding(
+                _make_finding(
                     "IOS-MISSING-OSPF-NEIGHBOR-ENABLEMENT",
                     "blocker",
                     device,
@@ -259,4 +263,4 @@ def verify_ios(config: str, design: NetworkDesign, device: str = "offline") -> l
 
 
 def findings_as_dicts(findings: list[Finding]) -> list[dict[str, object]]:
-    return [asdict(finding) for finding in findings]
+    return [finding.model_dump(mode="json") for finding in findings]

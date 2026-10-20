@@ -33,6 +33,8 @@ uv run ruff check .
 uv run mypy
 uv run netops design examples/campus.yaml --output build
 uv run netops verify examples/campus.yaml build/ios.cfg
+uv run netops validate-observed examples/observed-campus.yaml
+uv run netops validate-rules examples/diagnostic-rules-v1.yaml
 ```
 
 A successful offline verification means only that the generated text passed the checks implemented for this IOS subset. It does not establish that a router accepts the configuration, that an adjacency forms, or that a production change is safe.
@@ -51,5 +53,8 @@ The diagram includes the planned site/router ID, VLAN IDs, subnets, gateways, he
 - **Rendered config:** `build/ios.cfg` is generated text for review, not a device-ready deployment promise.
 - **Verification:** `netops verify` prints rule IDs, severity, evidence, and remediation. Blockers return a nonzero exit code.
 - **Optional Batfish:** install `uv sync --extra dev --extra batfish`, start a compatible Batfish service, and run `uv run netops verify-batfish --network <network-name> <snapshot-directory>`. Only `undefinedReferences` is currently queried; failures fail closed.
+- **Observed IR:** `examples/observed-campus.yaml` demonstrates raw source facts, timestamps, interface/VLAN/route/OSPF observations, a one-sided neighbor claim, and an evidence-backed reconciled link. `validate-observed` checks provenance and references; it does not connect to devices or calculate freshness.
+- **Diagnostic rules:** `examples/diagnostic-rules-v1.yaml` demonstrates a hypothesis rule with bounded typed predicates, evidence requirements, a staleness policy, and a citation. `validate-rules` only validates the YAML; no rule engine or remediation is implemented.
+- **Versioned schemas:** `schemas/observed-network-v1.schema.json`, `schemas/finding-v1.schema.json`, and `schemas/diagnostic-rules-v1.schema.json` are generated with `netops schema --kind observed --output <path>` (replace `observed` with `finding` or `diagnostic` for the other models).
 
 The current topology view is static output from the design. A visual diff, test-result dashboard, config parser/round-trip view, and live lab topology are not implemented.

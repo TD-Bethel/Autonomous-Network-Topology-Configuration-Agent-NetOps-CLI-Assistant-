@@ -35,6 +35,10 @@ See [System architecture](docs/architecture.md) for component boundaries and tru
 
 To run the optional Batfish undefined-reference check, start a compatible Batfish service and install the extra with `uv sync --extra dev --extra batfish`, then run `uv run netops verify-batfish --network <network-name> <snapshot-directory>`. Missing PyBatfish, a failed query, or an unavailable snapshot fails closed. This one check is not the complete semantic/behavioral verification roadmap.
 
+The brownfield contract drafts can be checked with `uv run netops validate-observed examples/observed-campus.yaml` and `uv run netops validate-rules examples/diagnostic-rules-v1.yaml`. These commands validate data only; discovery, reconciliation, stale-data evaluation, and diagnostic execution are not implemented. Generate their schemas with `uv run netops schema --kind observed`, `--kind finding`, or `--kind diagnostic`.
+
+For the brownfield contract examples, see [`examples/observed-campus.yaml`](examples/observed-campus.yaml) and [`examples/diagnostic-rules-v1.yaml`](examples/diagnostic-rules-v1.yaml). Their generated schemas are in [`schemas/`](schemas/). `ObservedNetwork` preserves source references and timestamps; freshness policy is declared but not evaluated by a discovery or diagnosis engine yet.
+
 ## Intent
 
 See [`examples/campus.yaml`](examples/campus.yaml). It intentionally contains no VLAN IDs or prefixes: those are derived by the design engine.
@@ -47,6 +51,7 @@ See [`examples/campus.yaml`](examples/campus.yaml). It intentionally contains no
 - Verification findings carry a rule identifier, severity, evidence, and remediation.
 - The Batfish adapter currently runs only `undefinedReferences`; it does not imply OSPF/BGP compatibility or reachability checks.
 - The CLI has no deployment command.
+- Observed-network, Finding, and diagnostic rule-set contracts are versioned v1 schemas. Observed facts require source-linked evidence; consumers must still enforce the declared max-age policy before joining facts.
 
 These guarantees are tested for the implemented IPv4 VLAN allocation path; they are not claims about unimplemented protocols or real-device behavior.
 

@@ -1,0 +1,968 @@
+{
+  "$defs": {
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "description": "A concise, redacted observation locator attached to a fact or finding.",
+      "properties": {
+        "source_id": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "observed_at": {
+          "format": "date-time",
+          "title": "Observed At",
+          "type": "string"
+        },
+        "locator": {
+          "minLength": 1,
+          "title": "Locator",
+          "type": "string"
+        },
+        "summary": {
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "observed_at",
+        "locator",
+        "summary"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "EvidenceSource": {
+      "additionalProperties": false,
+      "description": "A source invocation or collection channel, never a credential/payload store.",
+      "properties": {
+        "source_id": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "lldp",
+            "cdp",
+            "interface_inventory",
+            "mac_fdb",
+            "arp",
+            "routing_table",
+            "ospf_neighbor",
+            "hsrp_vrrp",
+            "config",
+            "snmp",
+            "netconf",
+            "manual"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "device": {
+          "minLength": 1,
+          "title": "Device",
+          "type": "string"
+        },
+        "method": {
+          "minLength": 1,
+          "title": "Method",
+          "type": "string"
+        },
+        "collected_at": {
+          "format": "date-time",
+          "title": "Collected At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "kind",
+        "device",
+        "method",
+        "collected_at"
+      ],
+      "title": "EvidenceSource",
+      "type": "object"
+    },
+    "Finding": {
+      "additionalProperties": false,
+      "description": "A stable, provenance-capable observation or verification result.",
+      "properties": {
+        "schema_version": {
+          "const": "v1",
+          "default": "v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "rule_id": {
+          "minLength": 1,
+          "pattern": "^[A-Z0-9][A-Z0-9_.:-]*$",
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "blocker",
+            "warn",
+            "info"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "device": {
+          "minLength": 1,
+          "title": "Device",
+          "type": "string"
+        },
+        "evidence": {
+          "minLength": 1,
+          "title": "Evidence",
+          "type": "string"
+        },
+        "remediation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Remediation"
+        },
+        "evidence_refs": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "enum": [
+                "high",
+                "medium",
+                "low"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "freshness": {
+          "default": "unknown",
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ],
+          "title": "Freshness",
+          "type": "string"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed At"
+        }
+      },
+      "required": [
+        "rule_id",
+        "severity",
+        "device",
+        "evidence"
+      ],
+      "title": "Finding",
+      "type": "object"
+    },
+    "FreshnessPolicy": {
+      "additionalProperties": false,
+      "description": "Consumer policy for deciding whether evidence is still usable.",
+      "properties": {
+        "max_age_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Max Age Seconds",
+          "type": "integer"
+        },
+        "on_stale": {
+          "default": "block",
+          "enum": [
+            "warn",
+            "block"
+          ],
+          "title": "On Stale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "max_age_seconds"
+      ],
+      "title": "FreshnessPolicy",
+      "type": "object"
+    },
+    "InterfaceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "device": {
+          "minLength": 1,
+          "title": "Device",
+          "type": "string"
+        },
+        "interface": {
+          "minLength": 1,
+          "title": "Interface",
+          "type": "string"
+        }
+      },
+      "required": [
+        "device",
+        "interface"
+      ],
+      "title": "InterfaceRef",
+      "type": "object"
+    },
+    "NeighborClaim": {
+      "additionalProperties": false,
+      "description": "One-sided raw LLDP/CDP claim, retained even if it cannot be reconciled.",
+      "properties": {
+        "local": {
+          "$ref": "#/$defs/InterfaceRef"
+        },
+        "remote_device": {
+          "minLength": 1,
+          "title": "Remote Device",
+          "type": "string"
+        },
+        "remote_interface": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Remote Interface"
+        },
+        "protocol": {
+          "enum": [
+            "lldp",
+            "cdp"
+          ],
+          "title": "Protocol",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "local",
+        "remote_device",
+        "protocol",
+        "evidence"
+      ],
+      "title": "NeighborClaim",
+      "type": "object"
+    },
+    "ObservedArpEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "device": {
+          "minLength": 1,
+          "title": "Device",
+          "type": "string"
+        },
+        "address": {
+          "anyOf": [
+            {
+              "format": "ipv4",
+              "type": "string"
+            },
+            {
+              "format": "ipv6",
+              "type": "string"
+            }
+          ],
+          "title": "Address"
+        },
+        "mac_address": {
+          "pattern": "(?i)^(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}$",
+          "title": "Mac Address",
+          "type": "string"
+        },
+        "interface": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Interface"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "device",
+        "address",
+        "mac_address",
+        "evidence"
+      ],
+      "title": "ObservedArpEntry",
+      "type": "object"
+    },
+    "ObservedDevice": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "vendor": {
+          "minLength": 1,
+          "title": "Vendor",
+          "type": "string"
+        },
+        "platform": {
+          "minLength": 1,
+          "title": "Platform",
+          "type": "string"
+        },
+        "software_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Software Version"
+        },
+        "interfaces": {
+          "items": {
+            "$ref": "#/$defs/ObservedInterface"
+          },
+          "title": "Interfaces",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "vendor",
+        "platform",
+        "evidence"
+      ],
+      "title": "ObservedDevice",
+      "type": "object"
+    },
+    "ObservedGatewayGroup": {
+      "additionalProperties": false,
+      "properties": {
+        "device": {
+          "minLength": 1,
+          "title": "Device",
+          "type": "string"
+        },
+        "protocol": {
+          "enum": [
+            "hsrp",
+            "vrrp"
+          ],
+          "title": "Protocol",
+          "type": "string"
+        },
+        "group_id": {
+          "maximum": 4095,
+          "minimum": 0,
+          "title": "Group Id",
+          "type": "integer"
+        },
+        "virtual_address": {
+          "anyOf": [
+            {
+              "format": "ipv4",
+              "type": "string"
+            },
+            {
+              "format": "ipv6",
+              "type": "string"
+            }
+          ],
+          "title": "Virtual Address"
+        },
+        "state": {
+          "enum": [
+            "active",
+            "standby",
+            "master",
+            "backup",
+            "unknown"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "device",
+        "protocol",
+        "group_id",
+        "virtual_address",
+        "state",
+        "evidence"
+      ],
+      "title": "ObservedGatewayGroup",
+      "type": "object"
+    },
+    "ObservedInterface": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "admin_status": {
+          "default": "unknown",
+          "enum": [
+            "up",
+            "down",
+            "unknown"
+          ],
+          "title": "Admin Status",
+          "type": "string"
+        },
+        "oper_status": {
+          "default": "unknown",
+          "enum": [
+            "up",
+            "down",
+            "unknown"
+          ],
+          "title": "Oper Status",
+          "type": "string"
+        },
+        "mode": {
+          "default": "unknown",
+          "enum": [
+            "access",
+            "trunk",
+            "routed",
+            "unknown"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "access_vlan": {
+          "anyOf": [
+            {
+              "maximum": 4094,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Access Vlan"
+        },
+        "allowed_vlans": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Allowed Vlans",
+          "type": "array"
+        },
+        "addresses": {
+          "items": {
+            "anyOf": [
+              {
+                "format": "ipv4interface",
+                "type": "string"
+              },
+              {
+                "format": "ipv6interface",
+                "type": "string"
+              }
+            ]
+          },
+          "title": "Addresses",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "evidence"
+      ],
+      "title": "ObservedInterface",
+      "type": "object"
+    },
+    "ObservedLink": {
+      "additionalProperties": false,
+      "properties": {
+        "endpoint_a": {
+          "$ref": "#/$defs/InterfaceRef"
+        },
+        "endpoint_b": {
+          "$ref": "#/$defs/InterfaceRef"
+        },
+        "link_kind": {
+          "default": "physical",
+          "enum": [
+            "physical",
+            "logical"
+          ],
+          "title": "Link Kind",
+          "type": "string"
+        },
+        "basis": {
+          "enum": [
+            "direct",
+            "reconciled",
+            "inferred"
+          ],
+          "title": "Basis",
+          "type": "string"
+        },
+        "confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "title": "Confidence",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "endpoint_a",
+        "endpoint_b",
+        "basis",
+        "confidence",
+        "evidence"
+      ],
+      "title": "ObservedLink",
+      "type": "object"
+    },
+    "ObservedMacEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "device": {
+          "minLength": 1,
+          "title": "Device",
+          "type": "string"
+        },
+        "vlan_id": {
+          "maximum": 4094,
+          "minimum": 1,
+          "title": "Vlan Id",
+          "type": "integer"
+        },
+        "mac_address": {
+          "pattern": "(?i)^(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}$",
+          "title": "Mac Address",
+          "type": "string"
+        },
+        "interface": {
+          "minLength": 1,
+          "title": "Interface",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "device",
+        "vlan_id",
+        "mac_address",
+        "interface",
+        "evidence"
+      ],
+      "title": "ObservedMacEntry",
+      "type": "object"
+    },
+    "ObservedOspfNeighbor": {
+      "additionalProperties": false,
+      "properties": {
+        "device": {
+          "minLength": 1,
+          "title": "Device",
+          "type": "string"
+        },
+        "interface": {
+          "minLength": 1,
+          "title": "Interface",
+          "type": "string"
+        },
+        "neighbor_router_id": {
+          "format": "ipv4",
+          "title": "Neighbor Router Id",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "down",
+            "init",
+            "2-way",
+            "exstart",
+            "exchange",
+            "loading",
+            "full",
+            "unknown"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "device",
+        "interface",
+        "neighbor_router_id",
+        "state",
+        "evidence"
+      ],
+      "title": "ObservedOspfNeighbor",
+      "type": "object"
+    },
+    "ObservedRoute": {
+      "additionalProperties": false,
+      "properties": {
+        "device": {
+          "minLength": 1,
+          "title": "Device",
+          "type": "string"
+        },
+        "prefix": {
+          "anyOf": [
+            {
+              "format": "ipv4network",
+              "type": "string"
+            },
+            {
+              "format": "ipv6network",
+              "type": "string"
+            }
+          ],
+          "title": "Prefix"
+        },
+        "protocol": {
+          "enum": [
+            "connected",
+            "static",
+            "ospf",
+            "bgp",
+            "eigrp",
+            "unknown"
+          ],
+          "title": "Protocol",
+          "type": "string"
+        },
+        "next_hop": {
+          "anyOf": [
+            {
+              "format": "ipv4",
+              "type": "string"
+            },
+            {
+              "format": "ipv6",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next Hop"
+        },
+        "outgoing_interface": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Outgoing Interface"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "device",
+        "prefix",
+        "protocol",
+        "evidence"
+      ],
+      "title": "ObservedRoute",
+      "type": "object"
+    },
+    "ObservedVlan": {
+      "additionalProperties": false,
+      "properties": {
+        "device": {
+          "minLength": 1,
+          "title": "Device",
+          "type": "string"
+        },
+        "vlan_id": {
+          "maximum": 4094,
+          "minimum": 1,
+          "title": "Vlan Id",
+          "type": "integer"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "prefixes": {
+          "items": {
+            "anyOf": [
+              {
+                "format": "ipv4network",
+                "type": "string"
+              },
+              {
+                "format": "ipv6network",
+                "type": "string"
+              }
+            ]
+          },
+          "title": "Prefixes",
+          "type": "array"
+        },
+        "member_interfaces": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Member Interfaces",
+          "type": "array"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "device",
+        "vlan_id",
+        "evidence"
+      ],
+      "title": "ObservedVlan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Version 1 snapshot of observed facts; no inferred fact is silently authoritative.",
+  "properties": {
+    "schema_version": {
+      "const": "v1",
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "network_id": {
+      "minLength": 1,
+      "title": "Network Id",
+      "type": "string"
+    },
+    "collected_at": {
+      "format": "date-time",
+      "title": "Collected At",
+      "type": "string"
+    },
+    "freshness": {
+      "$ref": "#/$defs/FreshnessPolicy"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/EvidenceSource"
+      },
+      "minItems": 1,
+      "title": "Sources",
+      "type": "array"
+    },
+    "devices": {
+      "items": {
+        "$ref": "#/$defs/ObservedDevice"
+      },
+      "minItems": 1,
+      "title": "Devices",
+      "type": "array"
+    },
+    "neighbor_claims": {
+      "items": {
+        "$ref": "#/$defs/NeighborClaim"
+      },
+      "title": "Neighbor Claims",
+      "type": "array"
+    },
+    "links": {
+      "items": {
+        "$ref": "#/$defs/ObservedLink"
+      },
+      "title": "Links",
+      "type": "array"
+    },
+    "vlans": {
+      "items": {
+        "$ref": "#/$defs/ObservedVlan"
+      },
+      "title": "Vlans",
+      "type": "array"
+    },
+    "mac_entries": {
+      "items": {
+        "$ref": "#/$defs/ObservedMacEntry"
+      },
+      "title": "Mac Entries",
+      "type": "array"
+    },
+    "arp_entries": {
+      "items": {
+        "$ref": "#/$defs/ObservedArpEntry"
+      },
+      "title": "Arp Entries",
+      "type": "array"
+    },
+    "routes": {
+      "items": {
+        "$ref": "#/$defs/ObservedRoute"
+      },
+      "title": "Routes",
+      "type": "array"
+    },
+    "ospf_neighbors": {
+      "items": {
+        "$ref": "#/$defs/ObservedOspfNeighbor"
+      },
+      "title": "Ospf Neighbors",
+      "type": "array"
+    },
+    "gateway_groups": {
+      "items": {
+        "$ref": "#/$defs/ObservedGatewayGroup"
+      },
+      "title": "Gateway Groups",
+      "type": "array"
+    },
+    "reconciliation_findings": {
+      "items": {
+        "$ref": "#/$defs/Finding"
+      },
+      "title": "Reconciliation Findings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "network_id",
+    "collected_at",
+    "freshness",
+    "sources",
+    "devices"
+  ],
+  "title": "ObservedNetwork",
+  "type": "object"
+}

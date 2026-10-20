@@ -1,0 +1,27 @@
+schema_version: v1
+rules:
+  - rule_id: OSPF-EXSTART-MTU-CANDIDATE
+    title: OSPF neighbor is stuck in EXSTART
+    signature: ospf_exstart
+    severity: warn
+    confidence_cap: low
+    hypothesis: >-
+      An MTU mismatch is one possible cause of an OSPF adjacency remaining in
+      EXSTART. This signal alone does not prove the cause; compare current
+      interface MTUs and collect both peers' logs before proposing a change.
+    required_evidence:
+      - fact_kind: ospf_neighbor
+        max_age_seconds: 300
+        minimum_sources: 1
+      - fact_kind: interface_inventory
+        max_age_seconds: 3600
+        minimum_sources: 1
+    predicates:
+      - fact_kind: ospf_neighbor
+        path: state
+        operator: eq
+        value: exstart
+    stale_evidence_behavior: block
+    next_step: collect_more_evidence
+    references:
+      - RFC 2328 section 10.6 (Database Description packet MTU check)

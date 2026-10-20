@@ -1,0 +1,254 @@
+{
+  "$defs": {
+    "DiagnosticRule": {
+      "additionalProperties": false,
+      "description": "A hypothesis pattern; it cannot contain executable commands or device actions.",
+      "properties": {
+        "rule_id": {
+          "minLength": 1,
+          "pattern": "^[A-Z0-9][A-Z0-9_.:-]*$",
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "signature": {
+          "enum": [
+            "ospf_exstart",
+            "route_missing_neighbor_up",
+            "traceroute_blackhole",
+            "one_way_reachability",
+            "interface_error_rate_spike"
+          ],
+          "title": "Signature",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "blocker",
+            "warn",
+            "info"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "confidence_cap": {
+          "default": "medium",
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "title": "Confidence Cap",
+          "type": "string"
+        },
+        "hypothesis": {
+          "minLength": 1,
+          "title": "Hypothesis",
+          "type": "string"
+        },
+        "required_evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRequirement"
+          },
+          "minItems": 1,
+          "title": "Required Evidence",
+          "type": "array"
+        },
+        "predicates": {
+          "items": {
+            "$ref": "#/$defs/Predicate"
+          },
+          "minItems": 1,
+          "title": "Predicates",
+          "type": "array"
+        },
+        "minimum_topology_confidence": {
+          "anyOf": [
+            {
+              "enum": [
+                "high",
+                "medium",
+                "low"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimum Topology Confidence"
+        },
+        "stale_evidence_behavior": {
+          "default": "block",
+          "enum": [
+            "warn",
+            "block"
+          ],
+          "title": "Stale Evidence Behavior",
+          "type": "string"
+        },
+        "next_step": {
+          "enum": [
+            "collect_more_evidence",
+            "compare_current_config",
+            "validate_candidate_plan"
+          ],
+          "title": "Next Step",
+          "type": "string"
+        },
+        "references": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "References",
+          "type": "array"
+        }
+      },
+      "required": [
+        "rule_id",
+        "title",
+        "signature",
+        "severity",
+        "hypothesis",
+        "required_evidence",
+        "predicates",
+        "next_step",
+        "references"
+      ],
+      "title": "DiagnosticRule",
+      "type": "object"
+    },
+    "EvidenceRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "fact_kind": {
+          "enum": [
+            "ospf_neighbor",
+            "routing_table",
+            "traceroute",
+            "reachability",
+            "interface_counters",
+            "interface_inventory",
+            "acl_config",
+            "telemetry_baseline",
+            "observed_link"
+          ],
+          "title": "Fact Kind",
+          "type": "string"
+        },
+        "max_age_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Max Age Seconds",
+          "type": "integer"
+        },
+        "minimum_sources": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Minimum Sources",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "fact_kind",
+        "max_age_seconds"
+      ],
+      "title": "EvidenceRequirement",
+      "type": "object"
+    },
+    "Predicate": {
+      "additionalProperties": false,
+      "description": "A bounded field comparison; no Python, shell, or device command expression.",
+      "properties": {
+        "fact_kind": {
+          "enum": [
+            "ospf_neighbor",
+            "routing_table",
+            "traceroute",
+            "reachability",
+            "interface_counters",
+            "interface_inventory",
+            "acl_config",
+            "telemetry_baseline",
+            "observed_link"
+          ],
+          "title": "Fact Kind",
+          "type": "string"
+        },
+        "path": {
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$",
+          "title": "Path",
+          "type": "string"
+        },
+        "operator": {
+          "enum": [
+            "eq",
+            "ne",
+            "gt",
+            "gte",
+            "lt",
+            "lte",
+            "contains"
+          ],
+          "title": "Operator",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "fact_kind",
+        "path",
+        "operator",
+        "value"
+      ],
+      "title": "Predicate",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "v1",
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/DiagnosticRule"
+      },
+      "minItems": 1,
+      "title": "Rules",
+      "type": "array"
+    }
+  },
+  "required": [
+    "rules"
+  ],
+  "title": "DiagnosticRuleSet",
+  "type": "object"
+}

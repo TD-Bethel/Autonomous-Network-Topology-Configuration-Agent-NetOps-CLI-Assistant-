@@ -20,6 +20,12 @@ flowchart LR
     localVerify --> findings[Typed findings; blockers fail closed]
     snapshot[User-supplied Batfish snapshot] --> bf[Optional Batfish adapter]
     bf --> findings
+    collectors[Future read-only discovery adapters] -. raw timestamped facts .-> observed[ObservedNetwork v1 IR]
+    observed --> reconcile[Future deterministic reconciliation]
+    reconcile --> observed
+    observed -. freshness-checked facts .-> diagnose[Future data-only rule evaluator]
+    rules[DiagnosticRuleSet v1 YAML] -. typed predicates only .-> diagnose
+    diagnose --> findings
     json --> review[Human review]
     ios --> review
     topology --> review
@@ -34,6 +40,9 @@ flowchart LR
 | Layer | Owns | Current implementation |
 | --- | --- | --- |
 | IR (`src/netops/ir/v1`) | Versioned declarative input schema and validation | Pydantic models; IDs and subnets are not accepted from intent |
+| Observed IR (`src/netops/ir/v1/observed.py`) | Timestamped observed facts, source references, and inferred-link confidence | v1 data contract only; collection and reconciliation are not implemented |
+| Finding IR (`src/netops/ir/v1/findings.py`) | Shared versioned result shape | Used by offline IOS checks and Batfish adapter; supports provenance/freshness metadata |
+| Diagnostic rules (`src/netops/ir/v1/diagnostics.py`) | Data-only signature, evidence, and predicate contracts | YAML validation only; no diagnosis evaluator or device actions |
 | Design (`src/netops/design`) | Deterministic allocation and planned facts | IPv4 VLAN blocks with headroom, stable VLAN IDs, `/32` router ID, optional `/31` uplinks |
 | Render (`src/netops/render`, `src/netops/templates`) | Text output from the design | IOS VLAN/SVI, DHCP, loopback, uplink, and OSPF config; Mermaid topology Markdown |
 | Verify (`src/netops/verify.py`) | Offline checks with structured findings | Fail-closed checks for the generated IOS subset |
@@ -49,6 +58,8 @@ flowchart LR
 - The Batfish command is opt-in. Failure to import/connect/query fails as a blocker; it cannot silently turn an unavailable check into a pass.
 - No device credentials, live configuration access, or apply/deploy command exists in this phase.
 - The future LLM edge is intentionally absent today. If added, it may suggest schema-valid intent or explain findings; the deterministic core remains the authority.
+- `ObservedNetwork.freshness.max_age_seconds` is policy data, not an automatic staleness check. Any future consumer must compare fact timestamps against its clock and fail/warn according to policy before making joins or diagnoses.
+- Diagnostic rule predicates are constrained data, not executable expressions. The current CLI validates rules but does not run them or propose configuration changes.
 
 ## Scope boundary
 

@@ -1,0 +1,141 @@
+{
+  "$defs": {
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "description": "A concise, redacted observation locator attached to a fact or finding.",
+      "properties": {
+        "source_id": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "observed_at": {
+          "format": "date-time",
+          "title": "Observed At",
+          "type": "string"
+        },
+        "locator": {
+          "minLength": 1,
+          "title": "Locator",
+          "type": "string"
+        },
+        "summary": {
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "observed_at",
+        "locator",
+        "summary"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A stable, provenance-capable observation or verification result.",
+  "properties": {
+    "schema_version": {
+      "const": "v1",
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "rule_id": {
+      "minLength": 1,
+      "pattern": "^[A-Z0-9][A-Z0-9_.:-]*$",
+      "title": "Rule Id",
+      "type": "string"
+    },
+    "severity": {
+      "enum": [
+        "blocker",
+        "warn",
+        "info"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "device": {
+      "minLength": 1,
+      "title": "Device",
+      "type": "string"
+    },
+    "evidence": {
+      "minLength": 1,
+      "title": "Evidence",
+      "type": "string"
+    },
+    "remediation": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Remediation"
+    },
+    "evidence_refs": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "confidence": {
+      "anyOf": [
+        {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Confidence"
+    },
+    "freshness": {
+      "default": "unknown",
+      "enum": [
+        "fresh",
+        "stale",
+        "unknown"
+      ],
+      "title": "Freshness",
+      "type": "string"
+    },
+    "observed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Observed At"
+    }
+  },
+  "required": [
+    "rule_id",
+    "severity",
+    "device",
+    "evidence"
+  ],
+  "title": "Finding",
+  "type": "object"
+}

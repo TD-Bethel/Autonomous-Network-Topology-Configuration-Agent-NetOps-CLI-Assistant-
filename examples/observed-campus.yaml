@@ -1,0 +1,162 @@
+schema_version: v1
+network_id: campus-example
+collected_at: "2026-10-20T10:05:00Z"
+freshness:
+  max_age_seconds: 300
+  on_stale: block
+sources:
+  - source_id: r1-interfaces
+    kind: interface_inventory
+    device: r1
+    method: napalm.get_interfaces_ip
+    collected_at: "2026-10-20T10:00:00Z"
+  - source_id: sw1-interfaces
+    kind: interface_inventory
+    device: sw1
+    method: napalm.get_interfaces
+    collected_at: "2026-10-20T10:00:00Z"
+  - source_id: sw1-lldp
+    kind: lldp
+    device: sw1
+    method: napalm.get_lldp_neighbors_detail
+    collected_at: "2026-10-20T10:01:00Z"
+  - source_id: r1-ospf
+    kind: ospf_neighbor
+    device: r1
+    method: show ip ospf neighbor parser
+    collected_at: "2026-10-20T10:02:00Z"
+  - source_id: sw1-fdb
+    kind: mac_fdb
+    device: sw1
+    method: show mac address-table parser
+    collected_at: "2026-10-20T10:03:00Z"
+devices:
+  - name: r1
+    vendor: Cisco
+    platform: IOS
+    software_version: 17.x
+    evidence:
+      - source_id: r1-interfaces
+        observed_at: "2026-10-20T10:00:00Z"
+        locator: show version
+        summary: Device identity and software version collected.
+    interfaces:
+      - name: GigabitEthernet1/0/1
+        admin_status: up
+        oper_status: up
+        mode: routed
+        addresses: [192.0.2.0/31]
+        evidence:
+          - source_id: r1-interfaces
+            observed_at: "2026-10-20T10:00:00Z"
+            locator: interfaces.GigabitEthernet1/0/1
+            summary: Routed uplink is operational.
+      - name: Loopback0
+        admin_status: up
+        oper_status: up
+        mode: routed
+        addresses: [10.255.0.0/32]
+        evidence:
+          - source_id: r1-interfaces
+            observed_at: "2026-10-20T10:00:00Z"
+            locator: interfaces.Loopback0
+            summary: Loopback router ID is configured.
+  - name: sw1
+    vendor: Cisco
+    platform: IOS
+    software_version: 17.x
+    evidence:
+      - source_id: sw1-interfaces
+        observed_at: "2026-10-20T10:00:00Z"
+        locator: show version
+        summary: Device identity and software version collected.
+    interfaces:
+      - name: GigabitEthernet1/0/1
+        admin_status: up
+        oper_status: up
+        mode: routed
+        addresses: [192.0.2.1/31]
+        evidence:
+          - source_id: sw1-interfaces
+            observed_at: "2026-10-20T10:00:00Z"
+            locator: interfaces.GigabitEthernet1/0/1
+            summary: Routed uplink is operational.
+      - name: GigabitEthernet1/0/2
+        admin_status: up
+        oper_status: up
+        mode: access
+        access_vlan: 10
+        evidence:
+          - source_id: sw1-interfaces
+            observed_at: "2026-10-20T10:00:00Z"
+            locator: interfaces.GigabitEthernet1/0/2
+            summary: Access interface assigned to VLAN 10.
+neighbor_claims:
+  - local:
+      device: sw1
+      interface: GigabitEthernet1/0/1
+    remote_device: r1
+    remote_interface: GigabitEthernet1/0/1
+    protocol: lldp
+    evidence:
+      - source_id: sw1-lldp
+        observed_at: "2026-10-20T10:01:00Z"
+        locator: lldp.GigabitEthernet1/0/1
+        summary: sw1 reports r1 on its uplink.
+links:
+  - endpoint_a:
+      device: r1
+      interface: GigabitEthernet1/0/1
+    endpoint_b:
+      device: sw1
+      interface: GigabitEthernet1/0/1
+    link_kind: physical
+    basis: direct
+    confidence: high
+    evidence:
+      - source_id: sw1-lldp
+        observed_at: "2026-10-20T10:01:00Z"
+        locator: lldp.GigabitEthernet1/0/1
+        summary: LLDP neighbor identity and port were observed.
+vlans:
+  - device: sw1
+    vlan_id: 10
+    name: staff
+    prefixes: [10.42.1.0/25]
+    member_interfaces: [GigabitEthernet1/0/2]
+    evidence:
+      - source_id: sw1-interfaces
+        observed_at: "2026-10-20T10:00:00Z"
+        locator: vlan.10
+        summary: VLAN 10 is present on the access port.
+mac_entries:
+  - device: sw1
+    vlan_id: 10
+    mac_address: 02:00:00:00:00:10
+    interface: GigabitEthernet1/0/2
+    evidence:
+      - source_id: sw1-fdb
+        observed_at: "2026-10-20T10:03:00Z"
+        locator: mac-table.vlan-10
+        summary: A learned MAC address is present on the access port.
+routes:
+  - device: r1
+    prefix: 10.42.1.0/25
+    protocol: ospf
+    next_hop: 192.0.2.1
+    outgoing_interface: GigabitEthernet1/0/1
+    evidence:
+      - source_id: r1-ospf
+        observed_at: "2026-10-20T10:02:00Z"
+        locator: ip-route.10.42.1.0/25
+        summary: Route is present through the OSPF uplink.
+ospf_neighbors:
+  - device: r1
+    interface: GigabitEthernet1/0/1
+    neighbor_router_id: 10.255.0.1
+    state: full
+    evidence:
+      - source_id: r1-ospf
+        observed_at: "2026-10-20T10:02:00Z"
+        locator: ospf.neighbors.GigabitEthernet1/0/1
+        summary: OSPF adjacency is full.
