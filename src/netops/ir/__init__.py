@@ -1,0 +1,1 @@
+"""Versioned network intent contracts."""

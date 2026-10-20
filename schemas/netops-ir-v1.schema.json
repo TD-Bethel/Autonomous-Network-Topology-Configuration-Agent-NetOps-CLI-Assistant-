@@ -1,0 +1,190 @@
+{
+  "$defs": {
+    "Site": {
+      "additionalProperties": false,
+      "description": "A site and the VLANs/uplinks requested at that site.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "vlans": {
+          "items": {
+            "$ref": "#/$defs/Vlan"
+          },
+          "minItems": 1,
+          "title": "Vlans",
+          "type": "array"
+        },
+        "uplinks": {
+          "items": {
+            "$ref": "#/$defs/Uplink"
+          },
+          "title": "Uplinks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "vlans"
+      ],
+      "title": "Site",
+      "type": "object"
+    },
+    "Uplink": {
+      "additionalProperties": false,
+      "description": "A physical point-to-point link whose addresses are compiler-assigned.",
+      "properties": {
+        "interface": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z][A-Za-z0-9./-]*$",
+          "title": "Interface",
+          "type": "string"
+        },
+        "peer": {
+          "minLength": 1,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+          "title": "Peer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "interface",
+        "peer"
+      ],
+      "title": "Uplink",
+      "type": "object"
+    },
+    "Vlan": {
+      "additionalProperties": false,
+      "description": "A requested broadcast domain; its VLAN ID and prefix are derived.",
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "purpose": {
+          "enum": [
+            "staff",
+            "voice",
+            "guest",
+            "mgmt",
+            "servers"
+          ],
+          "title": "Purpose",
+          "type": "string"
+        },
+        "hosts_required": {
+          "exclusiveMinimum": 0,
+          "title": "Hosts Required",
+          "type": "integer"
+        },
+        "growth_pct": {
+          "default": 30,
+          "maximum": 500,
+          "minimum": 0,
+          "title": "Growth Pct",
+          "type": "integer"
+        },
+        "dhcp_enabled": {
+          "default": true,
+          "title": "Dhcp Enabled",
+          "type": "boolean"
+        },
+        "dhcp_dns_server": {
+          "anyOf": [
+            {
+              "format": "ipv4",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dhcp Dns Server"
+        }
+      },
+      "required": [
+        "name",
+        "purpose",
+        "hosts_required"
+      ],
+      "title": "Vlan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Version 1 compiler input. No assigned IDs or subnets are accepted.",
+  "properties": {
+    "schema_version": {
+      "const": "v1",
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "supernet": {
+      "format": "ipv4network",
+      "title": "Supernet",
+      "type": "string"
+    },
+    "loopback_supernet": {
+      "format": "ipv4network",
+      "title": "Loopback Supernet",
+      "type": "string"
+    },
+    "p2p_supernet": {
+      "anyOf": [
+        {
+          "format": "ipv4network",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "P2P Supernet"
+    },
+    "sites": {
+      "items": {
+        "$ref": "#/$defs/Site"
+      },
+      "maxItems": 1,
+      "minItems": 1,
+      "title": "Sites",
+      "type": "array"
+    },
+    "security_baseline": {
+      "default": "cis-ios",
+      "minLength": 1,
+      "title": "Security Baseline",
+      "type": "string"
+    },
+    "ospf_process_id": {
+      "default": 1,
+      "maximum": 65535,
+      "minimum": 1,
+      "title": "Ospf Process Id",
+      "type": "integer"
+    },
+    "ospf_area": {
+      "default": 0,
+      "maximum": 4294967295,
+      "minimum": 0,
+      "title": "Ospf Area",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "supernet",
+    "loopback_supernet",
+    "sites"
+  ],
+  "title": "NetworkIntent",
+  "type": "object"
+}

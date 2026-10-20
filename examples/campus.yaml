@@ -1,0 +1,25 @@
+supernet: 10.42.0.0/20
+loopback_supernet: 10.255.0.0/24
+p2p_supernet: 192.0.2.0/24
+ospf_process_id: 10
+ospf_area: 0
+sites:
+  - name: hq
+    uplinks:
+      - interface: GigabitEthernet1/0/1
+        peer: core01
+    vlans:
+      - name: staff
+        purpose: staff
+        hosts_required: 120
+        growth_pct: 30
+        dhcp_dns_server: 10.42.0.53
+      - name: voice
+        purpose: voice
+        hosts_required: 50
+        growth_pct: 25
+        dhcp_enabled: false
+      - name: guest
+        purpose: guest
+        hosts_required: 80
+        growth_pct: 40

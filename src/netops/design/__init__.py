@@ -1,0 +1,1 @@
+"""Pure deterministic design functions."""
